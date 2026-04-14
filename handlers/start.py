@@ -18,7 +18,7 @@ async def cmd_myid(message: Message):
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
     if message.from_user.id != ADMIN_ID:
-        status = await has_application(message.from_user.id)
+        status = await has_application(message.from_user.id, message.from_user.username)
         if status == "pending":
             await message.answer("У вас уже есть заявка на рассмотрении. Ожидайте ответа.")
             return

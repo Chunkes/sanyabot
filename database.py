@@ -34,6 +34,27 @@ async def init_db():
                 shutil.copy(SEED_PATH, DB_PATH)
             else:
                 _save_db({"next_id": 1, "applications": {}})
+            return
+
+        if not os.path.exists(SEED_PATH):
+            return
+
+        db = _load_db()
+        with open(SEED_PATH, "r", encoding="utf-8") as f:
+            seed = json.load(f)
+
+        changed = False
+        for app_id, app in seed.get("applications", {}).items():
+            if app_id not in db["applications"]:
+                db["applications"][app_id] = app
+                changed = True
+
+        if seed.get("next_id", 1) > db.get("next_id", 1):
+            db["next_id"] = seed["next_id"]
+            changed = True
+
+        if changed:
+            _save_db(db)
 
 
 async def save_application(user_id, username, name, instagram, source, reason, vibe):
@@ -73,12 +94,20 @@ async def update_status(app_id, status):
             _save_db(db)
 
 
-async def has_application(user_id):
+async def has_application(user_id, username=None):
     async with _lock:
         db = _load_db()
         for app in db["applications"].values():
-            if app["user_id"] == user_id:
+            if app["user_id"] and app["user_id"] == user_id:
                 return app["status"]
+        if username:
+            uname_lower = username.lower()
+            for app in db["applications"].values():
+                stored = app.get("username")
+                if stored and stored.lower() == uname_lower and not app.get("user_id"):
+                    app["user_id"] = user_id
+                    _save_db(db)
+                    return app["status"]
         return None
 
 
