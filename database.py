@@ -115,6 +115,8 @@ async def get_all_user_ids():
         db = _load_db()
         ids = set()
         for app in db["applications"].values():
+            if app.get("status") == "rejected":
+                continue
             if app["user_id"] and app["user_id"] != 0:
                 ids.add(app["user_id"])
         return list(ids)
