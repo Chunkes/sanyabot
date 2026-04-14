@@ -1,9 +1,11 @@
 import json
 import os
+import shutil
 import asyncio
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "data.json")
+DB_PATH = os.getenv("DB_PATH", os.path.join(os.path.dirname(__file__), "data.json"))
+SEED_PATH = os.path.join(os.path.dirname(__file__), "data_seed.json")
 _lock = asyncio.Lock()
 
 
@@ -15,14 +17,23 @@ def _load_db():
 
 
 def _save_db(db):
+    db_dir = os.path.dirname(DB_PATH)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
     with open(DB_PATH, "w", encoding="utf-8") as f:
         json.dump(db, f, ensure_ascii=False, indent=2)
 
 
 async def init_db():
     async with _lock:
+        db_dir = os.path.dirname(DB_PATH)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
         if not os.path.exists(DB_PATH):
-            _save_db({"next_id": 1, "applications": {}})
+            if os.path.exists(SEED_PATH):
+                shutil.copy(SEED_PATH, DB_PATH)
+            else:
+                _save_db({"next_id": 1, "applications": {}})
 
 
 async def save_application(user_id, username, name, instagram, source, reason, vibe):
