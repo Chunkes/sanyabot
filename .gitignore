@@ -1,5 +1,6 @@
 .env
 data.json
+data_seed.json
 data.db
 __pycache__/
 *.pyc
