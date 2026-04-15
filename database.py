@@ -48,6 +48,11 @@ async def init_db():
             if app_id not in db["applications"]:
                 db["applications"][app_id] = app
                 changed = True
+            else:
+                existing = db["applications"][app_id]
+                if not existing.get("user_id") and app.get("user_id"):
+                    existing["user_id"] = app["user_id"]
+                    changed = True
 
         if seed.get("next_id", 1) > db.get("next_id", 1):
             db["next_id"] = seed["next_id"]
